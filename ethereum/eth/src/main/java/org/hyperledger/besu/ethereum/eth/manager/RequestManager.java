@@ -63,6 +63,9 @@ public class RequestManager {
     outstandingRequests.incrementAndGet();
     final BigInteger requestId = BigInteger.valueOf(requestIdCounter.getAndIncrement());
     final ResponseStream stream = createStream(requestId);
+
+    LOG.debug("Pietje: Sending request with id {}", requestId);
+
     sender.send(supportsRequestId ? messageData.wrapMessageData(requestId) : messageData);
     return stream;
   }
@@ -74,6 +77,9 @@ public class RequestManager {
       // If there's a requestId, find the specific stream it belongs to
       final Map.Entry<BigInteger, MessageData> requestIdAndEthMessage =
           ethMessage.getData().unwrapMessageData();
+
+      LOG.debug("Pietje: Received response with id {}", requestIdAndEthMessage.getKey());
+
       Optional.ofNullable(responseStreams.get(requestIdAndEthMessage.getKey()))
           .ifPresentOrElse(
               responseStream -> responseStream.processMessage(requestIdAndEthMessage.getValue()),
