@@ -38,14 +38,18 @@ public class RequestManager {
   private final AtomicLong requestIdCounter = new AtomicLong(0);
   private final Map<BigInteger, ResponseStream> responseStreams = new ConcurrentHashMap<>();
   private final EthPeer peer;
+
+  private final int requestCode;
+
   private final boolean supportsRequestId;
   private final String protocolName;
 
   private final AtomicInteger outstandingRequests = new AtomicInteger(0);
 
   public RequestManager(
-      final EthPeer peer, final boolean supportsRequestId, final String protocolName) {
+      final EthPeer peer, final int requestCode, final boolean supportsRequestId, final String protocolName) {
     this.peer = peer;
+    this.requestCode = requestCode;
     this.supportsRequestId = supportsRequestId;
     this.protocolName = protocolName;
   }
@@ -64,7 +68,7 @@ public class RequestManager {
     final BigInteger requestId = BigInteger.valueOf(requestIdCounter.getAndIncrement());
     final ResponseStream stream = createStream(requestId);
 
-    LOG.debug("Pietje: Sending request with id {}", requestId);
+    LOG.debug("Pietje: Sending request with code {} and id {}",requestCode, requestId);
 
     sender.send(supportsRequestId ? messageData.wrapMessageData(requestId) : messageData);
     return stream;
@@ -78,7 +82,7 @@ public class RequestManager {
       final Map.Entry<BigInteger, MessageData> requestIdAndEthMessage =
           ethMessage.getData().unwrapMessageData();
 
-      LOG.debug("Pietje: Received response with id {}", requestIdAndEthMessage.getKey());
+      LOG.debug("Pietje: Received response with code {} and id {}", requestCode, requestIdAndEthMessage.getKey());
 
       Optional.ofNullable(responseStreams.get(requestIdAndEthMessage.getKey()))
           .ifPresentOrElse(
@@ -103,7 +107,7 @@ public class RequestManager {
   }
 
   private ResponseStream createStream(final BigInteger requestId) {
-    final ResponseStream stream = new ResponseStream(peer, () -> deregisterStream(requestId));
+    final ResponseStream stream = new ResponseStream(peer, requestId, () -> deregisterStream(requestId));
     responseStreams.put(requestId, stream);
     return stream;
   }
@@ -153,13 +157,16 @@ public class RequestManager {
 
   public static class ResponseStream {
     private final EthPeer peer;
+
+    private final BigInteger requestId;
     private final DeregistrationProcessor deregisterCallback;
     private final Queue<Response> bufferedResponses = new ConcurrentLinkedQueue<>();
     private volatile boolean closed = false;
     private volatile ResponseCallback responseCallback = null;
 
-    public ResponseStream(final EthPeer peer, final DeregistrationProcessor deregisterCallback) {
+    public ResponseStream(final EthPeer peer, final BigInteger requestId, final DeregistrationProcessor deregisterCallback) {
       this.peer = peer;
+      this.requestId = requestId;
       this.deregisterCallback = deregisterCallback;
     }
 
@@ -187,6 +194,8 @@ public class RequestManager {
     public EthPeer getPeer() {
       return peer;
     }
+
+    public BigInteger getRequestId() { return requestId; }
 
     private void processMessage(final MessageData message) {
       if (closed) {

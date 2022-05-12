@@ -151,17 +151,17 @@ public class EthPeer implements Comparable<EthPeer> {
         Map.ofEntries(
             Map.entry(
                 EthPV62.GET_BLOCK_HEADERS,
-                new RequestManager(this, supportsRequestId, protocolName)),
+                new RequestManager(this, EthPV62.GET_BLOCK_HEADERS, supportsRequestId, protocolName)),
             Map.entry(
                 EthPV62.GET_BLOCK_BODIES,
-                new RequestManager(this, supportsRequestId, protocolName)),
+                new RequestManager(this, EthPV62.GET_BLOCK_BODIES, supportsRequestId, protocolName)),
             Map.entry(
-                EthPV63.GET_RECEIPTS, new RequestManager(this, supportsRequestId, protocolName)),
+                EthPV63.GET_RECEIPTS, new RequestManager(this, EthPV63.GET_RECEIPTS, supportsRequestId, protocolName)),
             Map.entry(
-                EthPV63.GET_NODE_DATA, new RequestManager(this, supportsRequestId, protocolName)),
+                EthPV63.GET_NODE_DATA, new RequestManager(this, EthPV63.GET_NODE_DATA, supportsRequestId, protocolName)),
             Map.entry(
                 EthPV65.GET_POOLED_TRANSACTIONS,
-                new RequestManager(this, supportsRequestId, protocolName))));
+                new RequestManager(this, EthPV65.GET_POOLED_TRANSACTIONS, supportsRequestId, protocolName))));
   }
 
   private void initSnapRequestManagers() {
@@ -169,10 +169,10 @@ public class EthPeer implements Comparable<EthPeer> {
     requestManagers.put(
         SnapProtocol.NAME,
         Map.ofEntries(
-            Map.entry(SnapV1.GET_ACCOUNT_RANGE, new RequestManager(this, true, SnapProtocol.NAME)),
-            Map.entry(SnapV1.GET_STORAGE_RANGE, new RequestManager(this, true, SnapProtocol.NAME)),
-            Map.entry(SnapV1.GET_BYTECODES, new RequestManager(this, true, SnapProtocol.NAME)),
-            Map.entry(SnapV1.GET_TRIE_NODES, new RequestManager(this, true, SnapProtocol.NAME))));
+            Map.entry(SnapV1.GET_ACCOUNT_RANGE, new RequestManager(this, SnapV1.GET_ACCOUNT_RANGE, true, SnapProtocol.NAME)),
+            Map.entry(SnapV1.GET_STORAGE_RANGE, new RequestManager(this, SnapV1.GET_STORAGE_RANGE, true, SnapProtocol.NAME)),
+            Map.entry(SnapV1.GET_BYTECODES, new RequestManager(this, SnapV1.GET_BYTECODES, true, SnapProtocol.NAME)),
+            Map.entry(SnapV1.GET_TRIE_NODES, new RequestManager(this, SnapV1.GET_TRIE_NODES, true, SnapProtocol.NAME))));
   }
 
   public void markValidated(final PeerValidator validator) {
