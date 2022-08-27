@@ -14,6 +14,9 @@
  */
 package org.hyperledger.besu.ethereum.eth.manager;
 
+import org.hyperledger.besu.ethereum.eth.messages.EthPV62;
+import org.hyperledger.besu.ethereum.eth.messages.EthPV63;
+import org.hyperledger.besu.ethereum.eth.messages.EthPV65;
 import org.hyperledger.besu.ethereum.p2p.rlpx.connections.PeerConnection.PeerNotConnected;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.MessageData;
 import org.hyperledger.besu.ethereum.p2p.rlpx.wire.messages.DisconnectMessage;
@@ -40,11 +43,50 @@ public class RequestManager {
   private final EthPeer peer;
 
   private final int requestCode;
+  private final String requestName;
 
   private final boolean supportsRequestId;
   private final String protocolName;
 
   private final AtomicInteger outstandingRequests = new AtomicInteger(0);
+
+  //  Copy pasta from EthProtocol.java . Only for debug logging purposes
+  private String messageName(final int code) {
+    switch (code) {
+      case EthPV62.STATUS:
+        return "Status";
+      case EthPV62.NEW_BLOCK_HASHES:
+        return "NewBlockHashes";
+      case EthPV62.TRANSACTIONS:
+        return "Transactions";
+      case EthPV62.GET_BLOCK_HEADERS:
+        return "GetBlockHeaders";
+      case EthPV62.BLOCK_HEADERS:
+        return "BlockHeaders";
+      case EthPV62.GET_BLOCK_BODIES:
+        return "GetBlockBodies";
+      case EthPV62.BLOCK_BODIES:
+        return "BlockBodies";
+      case EthPV62.NEW_BLOCK:
+        return "NewBlock";
+      case EthPV65.NEW_POOLED_TRANSACTION_HASHES:
+        return "NewPooledTransactionHashes";
+      case EthPV65.GET_POOLED_TRANSACTIONS:
+        return "GetPooledTransactions";
+      case EthPV65.POOLED_TRANSACTIONS:
+        return "PooledTransactions";
+      case EthPV63.GET_NODE_DATA:
+        return "GetNodeData";
+      case EthPV63.NODE_DATA:
+        return "NodeData";
+      case EthPV63.GET_RECEIPTS:
+        return "GetReceipts";
+      case EthPV63.RECEIPTS:
+        return "Receipts";
+      default:
+        return "Not sure what it is";
+    }
+  }
 
   public RequestManager(
       final EthPeer peer, final int requestCode, final boolean supportsRequestId, final String protocolName) {
@@ -52,6 +94,7 @@ public class RequestManager {
     this.requestCode = requestCode;
     this.supportsRequestId = supportsRequestId;
     this.protocolName = protocolName;
+    this.requestName = messageName(requestCode);
   }
 
   public int outstandingRequests() {
@@ -68,7 +111,7 @@ public class RequestManager {
     final BigInteger requestId = BigInteger.valueOf(requestIdCounter.getAndIncrement());
     final ResponseStream stream = createStream(requestId);
 
-    LOG.debug("Pietje: Sending request with code {} and id {}",requestCode, requestId);
+    LOG.debug("Pietje: Sending request with code {} (={}) and id {}", requestCode, requestName, requestId);
 
     sender.send(supportsRequestId ? messageData.wrapMessageData(requestId) : messageData);
     return stream;
@@ -82,7 +125,7 @@ public class RequestManager {
       final Map.Entry<BigInteger, MessageData> requestIdAndEthMessage =
           ethMessage.getData().unwrapMessageData();
 
-      LOG.debug("Pietje: Received response with code {} and id {}", requestCode, requestIdAndEthMessage.getKey());
+      LOG.debug("Pietje: Received response with code {} (={}) and id {}", requestCode, requestName, requestIdAndEthMessage.getKey());
 
       Optional.ofNullable(responseStreams.get(requestIdAndEthMessage.getKey()))
           .ifPresentOrElse(
