@@ -132,8 +132,7 @@ public class RequestManager {
               responseStream -> responseStream.processMessage(requestIdAndEthMessage.getValue()),
               // disconnect on incorrect requestIds
               () -> {
-                LOG.debug("Request ID incorrect (BREACH_OF_PROTOCOL), disconnecting peer {}", peer);
-                peer.disconnect(DisconnectMessage.DisconnectReason.BREACH_OF_PROTOCOL);
+                peer.recordUselessResponse("Request ID incorrect");
               });
     } else {
       // otherwise iterate through all of them
