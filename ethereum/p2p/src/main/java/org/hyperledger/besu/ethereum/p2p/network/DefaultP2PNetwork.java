@@ -502,7 +502,7 @@ public class DefaultP2PNetwork implements P2PNetwork {
       // Set up permissions
       // Fold peer reputation into permissions
       final PeerPermissionsDenylist misbehavingPeers = PeerPermissionsDenylist.create(500);
-      final PeerDenylistManager reputationManager = new PeerDenylistManager(misbehavingPeers);
+      final PeerDenylistManager reputationManager = new PeerDenylistManager(misbehavingPeers, maintainedPeers);
       peerPermissions = PeerPermissions.combine(peerPermissions, misbehavingPeers);
 
       final MutableLocalNode localNode =
