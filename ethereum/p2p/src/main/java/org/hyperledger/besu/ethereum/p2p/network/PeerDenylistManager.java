@@ -50,11 +50,13 @@ public class PeerDenylistManager implements DisconnectCallback {
       final DisconnectReason reason,
       final boolean initiatedByPeer) {
 
-    int s = maintainedPeers.size();
-    LOG.debug("There are {} peers in the maintained peer list", s);
     if (shouldBlock(reason, initiatedByPeer)) {
-      LOG.debug("Added peer {} to peer denylist for reason {}", connection, reason.name());
-      denylist.add(connection.getPeer());
+      if (maintainedPeers.contains(connection.getPeer())) {
+        LOG.debug("Skip adding maintained peer {} to denylist for reason {}", connection, reason.name());
+      } else {
+        LOG.debug("Added peer {} to peer denylist for reason {}", connection, reason.name());
+        denylist.add(connection.getPeer());
+      }
     }
   }
 
